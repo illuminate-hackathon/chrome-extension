@@ -1,9 +1,11 @@
-let messageScript = [
+let defaultScript = [
   {
     role: "assistant",
     content: "How can I help you today?",
   },
 ];
+
+let messageScript = JSON.parse(JSON.stringify(defaultScript));
 
 const generateLocalStorageKey = function (tabId) {
   return `illuminate_messages_${tabId}`;
@@ -91,6 +93,16 @@ function addUserMessage() {
       const userInputValue = event.target.value.trim();
 
       if (userInputValue === "") return;
+      if (userInputValue === "clear") {
+        const localStorageKey = generateLocalStorageKey(tabId);
+            chrome.storage.local.set({ [localStorageKey]: defaultScript });
+        const localStorageKeyConversationId = generateLocalStorageKeyForConversationId(tabId);
+            chrome.storage.local.set({ [localStorageKeyConversationId]: null });
+        conversationId = null;
+        messageScript = JSON.parse(JSON.stringify(defaultScript));
+        renderMessages();
+        return;
+      }
       messageScript.push({ role: "user", content: userInputValue });
       messageScript.push({ role: "loading" });
 
@@ -204,8 +216,7 @@ document.addEventListener("DOMContentLoaded", (event) => {
     tabId = activeTab.id;
     console.log("tabid: " + tabId);
     const localStorageKey = generateLocalStorageKey(tabId);
-    const localStorageKeyConversationId =
-      generateLocalStorageKeyForConversationId(tabId);
+    const localStorageKeyConversationId = generateLocalStorageKeyForConversationId(tabId);
     chrome.storage.local.get(localStorageKey, function (result) {
       if (result[localStorageKey] !== undefined) {
         messageScript = result[localStorageKey];
@@ -214,7 +225,8 @@ document.addEventListener("DOMContentLoaded", (event) => {
         }
         renderMessages(tabId);
       } else {
-        chrome.storage.local.set({ [localStorageKey]: messageScript });
+        chrome.storage.local.set({ [localStorageKey]: defaultScript });
+        messageScript = JSON.parse(JSON.stringify(defaultScript));
       }
     });
     chrome.storage.local.get(localStorageKeyConversationId, function (result) {
