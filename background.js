@@ -12,7 +12,7 @@ const generateSystemPrompt = async function (pageTitle, pageURL, pageContext) {
         .then(response => response.text());
     return systemPromptTemplate.replace('__PAGE_TITLE__', pageTitle)
         .replace('__PAGE_URL__', pageURL)
-        .replace('__PAGE_CONTEXT__', pageContext);
+        .replace('__PAGE_CONTENT__', pageContext);
 }
 
 const requestOptions = function (method, body) {
