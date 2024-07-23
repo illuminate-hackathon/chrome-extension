@@ -6,17 +6,19 @@ const SYSTEM_PROMPT = chrome.runtime.getURL('system-prompt.txt');
 // In-memory conversation history storage (keyed by conversation id)
 const CONVERSATION_HISTORY = {};
 
-async function getSystemPrompt(pageContext) {
-    return await fetch(SYSTEM_PROMPT)
-        .then(response => response.text())
-        .then(systemPrompt => systemPrompt + '\n' + pageContext);
+async function getSystemPrompt(pageTitle, pageURL, pageContext) {
+    const systemPromptTemplate = await fetch(SYSTEM_PROMPT)
+        .then(response => response.text());
+    return systemPromptTemplate.replace("__PAGE_TITLE__", pageTitle)
+        .replace("__PAGE_URL__", pageURL)
+        .replace("__PAGE_CONTEXT__", pageContext);
 }
 
-async function createConversation(userMessage, pageContext) {
+async function createConversation({ userMessage, pageTitle, pageURL, pageContext }) {
 
     // Prepare the request body
     const body = {
-        context: getSystemPrompt(pageContext),
+        context: getSystemPrompt(pageTitle, pageURL, pageContext),
         userPrompt: userMessage,
     };
 
