@@ -5,7 +5,6 @@ input[type="text"]:focus {
 
 .popup-title {
   font-size: 20px;
-  font-weight: bold;
   margin-bottom: 10px;
 }
 
@@ -33,10 +32,13 @@ input[type="text"]:focus {
   margin: 5px;
   max-width: 500px;
   align-self: flex-end;
+  background-image: linear-gradient(
+    rgb(0, 132, 255),
+    rgba(14, 121, 220, 0.589)
+  );
 }
 
 .message-bubble-bot {
-  background-color: rgb(242, 244, 246);
   color: black;
   border-radius: 10px 10px 10px 0;
   padding: 10px;
@@ -46,6 +48,10 @@ input[type="text"]:focus {
   white-space: pre; /* IE>=6 */
   white-space: -moz-pre-wrap; /* For Fx<=2 */
   white-space: pre-wrap; /* Fx>3, Opera>8, Safari>3*/
+  background-image: linear-gradient(
+    rgb(233, 233, 232),
+    rgba(225, 225, 222, 0.766)
+  );
 }
 
 .message-input {

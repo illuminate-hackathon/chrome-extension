@@ -117,61 +117,66 @@ function addUserMessage() {
       let action =
         conversationId === null ? "createConversation" : "continueConversation";
       chrome.runtime.sendMessage(
-          {
-            action: action,
-            userMessage: userInputValue,
-            pageTitle: title,
-            pageURL: url,
-            pageContext: bodyText,
-            conversationId
-          },
-          (response) => {
-            messageScript.pop();
-            if (chrome.runtime.lastError) {
-              console.error(chrome.runtime.lastError.message);
-              messageScript.push({
-                role: "assistant",
-                content: "Sorry couldn't send data",
-              });
-              renderMessages();
-              return;
-            }
-
-            if (response === null || response?.error) {
-              console.log("Error from AI API");
-              messageScript.push({
-                role: "assistant",
-                content: "Sorry couldn't get data",
-              });
-              renderMessages();
-              return;
-            }
-
-            conversationId = response.conversationId;
-            const localStorageKeyConversationId = generateLocalStorageKeyForConversationId(tabId);
-            chrome.storage.local.set({ [localStorageKeyConversationId]: conversationId });
-
-            if (
-                response.chatMessages &&
-                Array.isArray(response.chatMessages) &&
-                response.chatMessages.length > 1
-            ) {
-              const aiContent = response.chatMessages[response.chatMessages.length-1].content;
-              messageScript.push({ role: "assistant", content: aiContent });
-            } else {
-              console.error(
-                  "Invalid response format or empty content:",
-                  response
-              );
-              messageScript.push({
-                role: "assistant",
-                content: "Sorry, I couldn't understand the response.",
-              });
-            }
-            const localStorageKey = generateLocalStorageKey(tabId);
-            chrome.storage.local.set({ [localStorageKey]: messageScript });
+        {
+          action: action,
+          userMessage: userInputValue,
+          pageTitle: title,
+          pageURL: url,
+          pageContext: bodyText,
+          conversationId,
+        },
+        (response) => {
+          messageScript.pop();
+          if (chrome.runtime.lastError) {
+            console.error(chrome.runtime.lastError.message);
+            messageScript.push({
+              role: "assistant",
+              content: "Sorry couldn't send data",
+            });
             renderMessages();
+            return;
+          }
+
+          if (response === null || response?.error) {
+            console.log("Error from AI API");
+            messageScript.push({
+              role: "assistant",
+              content: "Sorry couldn't get data",
+            });
+            renderMessages();
+            return;
+          }
+
+          conversationId = response.conversationId;
+          const localStorageKeyConversationId =
+            generateLocalStorageKeyForConversationId(tabId);
+          chrome.storage.local.set({
+            [localStorageKeyConversationId]: conversationId,
           });
+
+          if (
+            response.chatMessages &&
+            Array.isArray(response.chatMessages) &&
+            response.chatMessages.length > 1
+          ) {
+            const aiContent =
+              response.chatMessages[response.chatMessages.length - 1].content;
+            messageScript.push({ role: "assistant", content: aiContent });
+          } else {
+            console.error(
+              "Invalid response format or empty content:",
+              response
+            );
+            messageScript.push({
+              role: "assistant",
+              content: "Sorry, I couldn't understand the response.",
+            });
+          }
+          const localStorageKey = generateLocalStorageKey(tabId);
+          chrome.storage.local.set({ [localStorageKey]: messageScript });
+          renderMessages();
+        }
+      );
     }
   };
 }
@@ -180,7 +185,7 @@ function createUserInput() {
   const userInput = document.createElement("textarea");
   userInput.id = "user-input";
   userInput.className = "message-input";
-  userInput.placeholder = "Ask ilLuMinate something...";
+  userInput.placeholder = "Chat with ilLuMinate...";
   userInput.onkeydown = addUserMessage();
 
   return userInput;
@@ -198,23 +203,27 @@ document.addEventListener("DOMContentLoaded", (event) => {
 
   chrome.tabs.query({ currentWindow: true, active: true }, function (tabs) {
     var activeTab = tabs[0];
-    chrome.tabs.sendMessage(activeTab.id, {action: "scrapePage"}, function(response){
-      console.log("response for page load");
-      console.log(response);
-      if (response != null) {
-        bodyText = response.content;
-        url = activeTab.url;
-        title = response.title;
-        console.log(bodyText);
-        console.log(url);
-        console.log(title);
+    chrome.tabs.sendMessage(
+      activeTab.id,
+      { action: "scrapePage" },
+      function (response) {
+        console.log("response for page load");
+        console.log(response);
+        if (response != null) {
+          bodyText = response.content;
+          url = activeTab.url;
+          title = response.title;
+          console.log(bodyText);
+          console.log(url);
+          console.log(title);
+        }
       }
-    });
+    );
     tabId = activeTab.id;
     console.log("tabid: " + tabId);
     const localStorageKey = generateLocalStorageKey(tabId);
-    const localStorageKeyConversationId = generateLocalStorageKeyForConversationId(tabId);
-    //chrome.storage.local.set({ [localStorageKey]: messageScript });
+    const localStorageKeyConversationId =
+      generateLocalStorageKeyForConversationId(tabId);
     chrome.storage.local.get(localStorageKey, function (result) {
       if (result[localStorageKey] !== undefined) {
         messageScript = result[localStorageKey];
