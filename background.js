@@ -1,50 +1,79 @@
 console.log('Background service worker loaded');
 
-const BASE_API_URL = "https://api.amazon.com/bedrock/v1";
-const AWS_ACCESS_KEY_ID = "";
-const MODEL_ID = "anthropic.claude-3.5-sonnet-20240620-v1:0";
-const SYSTEM_PROMPT = ""; // TODO
+const BASE_API_URL = "http:localhost:8123";
+const SYSTEM_PROMPT = chrome.runtime.getURL('system-prompt.txt');
 
-// In-memory conversation history storage
-const CONVERSATION_HISTORY = [];
+// In-memory conversation history storage (keyed by conversation id)
+const CONVERSATION_HISTORY = {};
 
-async function converse(userMessage) {
-
-    CONVERSATION_HISTORY.push({
-        role: "user",
-        content: [
-            {
-                text: userMessage,
-            }
-        ],
-    })
-
-    const params = {
-        messages: CONVERSATION_HISTORY,
-        system: [ 
-           {
-            text: SYSTEM_PROMPT,
-           }
-        ],
-     }
-
-     const bedrockRuntime = new AWS.BedrockRuntime();
-     
-     bedrockRuntime.converse(params, function(err, data) {
-        if (err) {
-            console.log(err, err.stack);
-            CONVERSATION_HISTORY.push({
-                role: "system",
-                content: [
-                    {
-                        text: "I'm sorry, I'm having trouble connecting to the server. Please try again later.",
-                    }
-                ],
-            })
-        } else {
-            CONVERSATION_HISTORY.push(data.output.message);
-        }
-     });
-
-     return CONVERSATION_HISTORY;
+async function getSystemPrompt(pageContext) {
+    return await fetch(SYSTEM_PROMPT)
+        .then(response => response.text())
+        .then(systemPrompt => systemPrompt + '\n' + pageContext);
 }
+
+async function createConversation(userMessage, pageContext) {
+
+    // Prepare the request body
+    const body = {
+        context: getSystemPrompt(pageContext),
+        userPrompt: userMessage,
+    };
+
+    // Make the API request to ilLuMinate
+    return await fetch(`${BASE_API_URL}/api/conversations`, {
+            method: 'POST',
+            body: JSON.stringify(body),
+            headers: {
+                'Accept': 'application/json',
+                'Content-Type': 'application/json',
+            },
+        })
+        .then(response => JSON.parse(response.json()))
+        .then(conversation => {
+            CONVERSATION_HISTORY[conversation.conversationId] = conversation;
+            return CONVERSATION_HISTORY[conversation.conversationId];
+        });
+}
+
+async function continueConversation(conversationId, userMessage) {
+
+    // Prepare the request body
+    const body = {
+        userPrompt: userMessage,
+    };
+
+    // Make the API request to ilLuMinate
+    return await fetch(`${BASE_API_URL}/api/conversations/${conversationId}`, {
+            method: 'PATCH',
+            body: JSON.stringify(body),
+            headers: {
+                'Accept': 'application/json',
+                'Content-Type': 'application/json',
+            },
+        })
+        .then(response => JSON.parse(response.json()))
+        .then(conversation => {
+            CONVERSATION_HISTORY[conversation.conversationId] = conversation;
+            return CONVERSATION_HISTORY[conversation.conversationId];
+        });
+}
+
+chrome.runtime.onInstalled.addListener(() => {
+    console.log("ilLuMinate installed.");
+});
+
+chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
+    if (request.action === "createConversation") {
+        const { userMessage, pageContext } = request;
+        createConversation(userMessage, pageContext)
+            .then(conversation => sendResponse(conversation));
+        return true;
+    }
+    if (request.action === "continueConversation") {
+        const { conversationId, userMessage } = request;
+        continueConversation(conversationId, userMessage)
+            .then(conversation => sendResponse(conversation));
+        return true;
+    }
+});
