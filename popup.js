@@ -1,17 +1,21 @@
 let messageScript = [
-  { role: "user", content: "test user message" },
   {
     role: "assistant",
-    content: "Hello, how are you? \n testing new line",
+    content: "How can I help you today?",
   },
 ];
 
 const generateLocalStorageKey = function (tabId) {
-  return `illuminate_${tabId}`;
+  return `illuminate_messages_${tabId}`;
 };
 
-chrome.tabs.getCurrent((tab) => {
+const generateLocalStorageKeyForConversationId = function (tabId) {
+  return `illuminate_conv_id_${tabId}`;
+};
+
+/*chrome.tabs.getCurrent((tab) => {
   const tabId = tab.id;
+  console.log("tabid: " + tabId);
   const localStorageKey = generateLocalStorageKey(tabId);
   chrome.storage.local.set({ [localStorageKey]: messageScript });
   chrome.storage.local.get(localStorageKey, function (result) {
@@ -25,7 +29,7 @@ chrome.tabs.getCurrent((tab) => {
       chrome.storage.local.set({ [localStorageKey]: messageScript });
     }
   });
-});
+});*/
 
 const popup = document.getElementById("popup");
 popup.className = "popup-body";
@@ -35,6 +39,7 @@ let bodyText = null;
 let url = null;
 let title = null;
 let conversationId = null;
+let tabId = null;
 
 function renderMessages(tabId) {
   messagesContainer.innerHTML = "";
@@ -142,26 +147,29 @@ function addUserMessage() {
               return;
             }
 
-          conversationId = response.conversationId;
-          if (
-            response.chatMessages &&
-            Array.isArray(response.chatMessages) &&
-            response.chatMessages.length > 1
-          ) {
-            const aiContent =
-              response.chatMessages[response.chatMessages.length - 1].content;
-            messageScript.push({ role: "assistant", content: aiContent });
-          } else {
-            console.error(
-              "Invalid response format or empty content:",
-              response
-            );
-            messageScript.push({
-              role: "assistant",
-              content: "Sorry, I couldn't understand the response.",
-            });
-          }
+            conversationId = response.conversationId;
+            const localStorageKeyConversationId = generateLocalStorageKeyForConversationId(tabId);
+            chrome.storage.local.set({ [localStorageKeyConversationId]: conversationId });
 
+            if (
+                response.chatMessages &&
+                Array.isArray(response.chatMessages) &&
+                response.chatMessages.length > 1
+            ) {
+              const aiContent = response.chatMessages[response.chatMessages.length-1].content;
+              messageScript.push({ role: "assistant", content: aiContent });
+            } else {
+              console.error(
+                  "Invalid response format or empty content:",
+                  response
+              );
+              messageScript.push({
+                role: "assistant",
+                content: "Sorry, I couldn't understand the response.",
+              });
+            }
+            const localStorageKey = generateLocalStorageKey(tabId);
+            chrome.storage.local.set({ [localStorageKey]: messageScript });
             renderMessages();
           });
     }
@@ -190,21 +198,38 @@ document.addEventListener("DOMContentLoaded", (event) => {
 
   chrome.tabs.query({ currentWindow: true, active: true }, function (tabs) {
     var activeTab = tabs[0];
-    chrome.tabs.sendMessage(
-      activeTab.id,
-      { action: "scrapePage" },
-      function (response) {
-        console.log("response for page load");
-        console.log(response);
-        if (response != null) {
-          bodyText = response.content;
-          url = activeTab.url;
-          title = response.title;
-          console.log(bodyText);
-          console.log(url);
-          console.log(title);
-        }
+    chrome.tabs.sendMessage(activeTab.id, {action: "scrapePage"}, function(response){
+      console.log("response for page load");
+      console.log(response);
+      if (response != null) {
+        bodyText = response.content;
+        url = activeTab.url;
+        title = response.title;
+        console.log(bodyText);
+        console.log(url);
+        console.log(title);
       }
-    );
+    });
+    tabId = activeTab.id;
+    console.log("tabid: " + tabId);
+    const localStorageKey = generateLocalStorageKey(tabId);
+    const localStorageKeyConversationId = generateLocalStorageKeyForConversationId(tabId);
+    //chrome.storage.local.set({ [localStorageKey]: messageScript });
+    chrome.storage.local.get(localStorageKey, function (result) {
+      if (result[localStorageKey] !== undefined) {
+        messageScript = result[localStorageKey];
+        if (messageScript[messageScript.length - 1].role === "loading") {
+          messageScript.pop();
+        }
+        renderMessages(tabId);
+      } else {
+        chrome.storage.local.set({ [localStorageKey]: messageScript });
+      }
+    });
+    chrome.storage.local.get(localStorageKeyConversationId, function (result) {
+      if (result[localStorageKeyConversationId] !== undefined) {
+        conversationId = result[localStorageKeyConversationId];
+      }
+    });
   });
 });
