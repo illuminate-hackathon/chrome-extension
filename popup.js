@@ -112,29 +112,35 @@ function addUserMessage() {
       let action =
         conversationId === null ? "createConversation" : "continueConversation";
       chrome.runtime.sendMessage(
-        {
-          action: action,
-          userMessage: userInputValue,
-          pageTitle: title,
-          pageURL: url,
-          pageContext: bodyText,
-          conversationId,
-        },
-        (response) => {
-          messageScript.pop();
-          if (chrome.runtime.lastError) {
-            console.error(chrome.runtime.lastError.message);
-            messageScript.push({
-              role: "assistant",
-              content: "Sorry couldn't send data",
-            });
-            return;
-          }
+          {
+            action: action,
+            userMessage: userInputValue,
+            pageTitle: title,
+            pageURL: url,
+            pageContext: bodyText,
+            conversationId
+          },
+          (response) => {
+            messageScript.pop();
+            if (chrome.runtime.lastError) {
+              console.error(chrome.runtime.lastError.message);
+              messageScript.push({
+                role: "assistant",
+                content: "Sorry couldn't send data",
+              });
+              renderMessages();
+              return;
+            }
 
-          if (response.error) {
-            console.error("Error from AI API:", response.error);
-            return;
-          }
+            if (response === null || response?.error) {
+              console.log("Error from AI API");
+              messageScript.push({
+                role: "assistant",
+                content: "Sorry couldn't get data",
+              });
+              renderMessages();
+              return;
+            }
 
           conversationId = response.conversationId;
           if (
@@ -156,11 +162,8 @@ function addUserMessage() {
             });
           }
 
-          renderMessages();
-        }
-      );
-
-      renderMessages();
+            renderMessages();
+          });
     }
   };
 }

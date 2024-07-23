@@ -27,29 +27,37 @@ const createConversation = async function ({ userPrompt, pageTitle, pageURL, pag
     // Prepare the request body
     const context = await generateSystemPrompt(pageTitle, pageURL, pageContext);
     const body = { context, userPrompt };
-
-    // Make the API request to ilLuMinate
-    const conversationResponse = await fetch(
-        `${BASE_API_URL}/api/conversations`,
-        requestOptions('POST', body)
-    );
+    let conversationResponse = null;
+    try {
+        // Make the API request to ilLuMinate
+        conversationResponse = await fetch(
+            `${BASE_API_URL}/api/conversations`,
+            requestOptions('POST', body)
+        );
+    } catch (e) {
+        console.log("failed to get data");
+    }
 
     // Return the response
-    return await conversationResponse.json();
+    return await conversationResponse?.json();
 }
 
 const continueConversation = async function ({ conversationId, userPrompt }) {
     // Prepare the request body
     const body = { userPrompt };
-
+    let conversationResponse = null;
     // Make the API request to ilLuMinate
-    const conversationResponse = await fetch(
-        `${BASE_API_URL}/api/conversations/${conversationId}`,
-        requestOptions('PATCH', body)
-    );
+    try {
+        conversationResponse = await fetch(
+            `${BASE_API_URL}/api/conversations/${conversationId}`,
+            requestOptions('PATCH', body)
+        );
+    } catch (e) {
+        console.log("failed to load data");
+    }
 
     // Return the response
-    return await conversationResponse.json();
+    return await conversationResponse?.json();
 }
 
 // Listen for the extension being installed
