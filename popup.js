@@ -71,6 +71,7 @@ function addUserMessage() {
         messageScript.pop();
       }
       const userInputValue = event.target.value;
+      if (userInputValue === "") return;
       messageScript.push({ role: "user", content: userInputValue });
       messageScript.push({ role: "loading" });
       // send and get response back, replace with actual response

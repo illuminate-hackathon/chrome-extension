@@ -1,5 +1,5 @@
 input[type="text"]:focus {
-  border: 3px solid #555;
+  border: 1px solid #555;
   border-radius: 10px;
 }
 
@@ -13,8 +13,8 @@ input[type="text"]:focus {
   display: flex;
   flex-direction: column;
   justify-content: space-between;
-  height: 400px;
-  width: 400px;
+  height: 500px;
+  width: 600px;
 }
 
 .messages-container {
@@ -28,7 +28,7 @@ input[type="text"]:focus {
   border-radius: 10px 10px 0 10px;
   padding: 10px;
   margin: 5px;
-  max-width: 200px;
+  max-width: 500px;
   align-self: flex-end;
 }
 
@@ -38,16 +38,15 @@ input[type="text"]:focus {
   border-radius: 10px 10px 10px 0;
   padding: 10px;
   margin: 5px;
-  max-width: 200px;
+  max-width: 500px;
 }
 
 .message-input {
-  width: 92%;
   padding: 10px;
   border: 1px solid lightgray;
   border-radius: 10px;
   margin-top: 10px;
-  width: 378px;
+  width: 580px;
 }
 
 .loading-dots {
