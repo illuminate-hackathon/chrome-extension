@@ -1,3 +1,36 @@
+let testScript = [
+  { role: "user", content: "Hello, how are you?" },
+  {
+    role: "assistant",
+    content: "I'm good, thank you for asking. How can I help you today?",
+  },
+];
+
+const popup = document.getElementById("popup");
+popup.className = "popup-body";
+const messagesContainer = document.createElement("div");
+
+function renderMessages() {
+  messagesContainer.innerHTML = "";
+  const messages = testScript.map((message) => {
+    if (message.role === "user") {
+      return createUserMessage(message.content);
+    }
+    if (message.role === "assistant") {
+      return createBotMessage(message.content);
+    }
+    if (message.role === "loading") {
+      return createLoadingMessage();
+    }
+  });
+
+  messages.forEach((message) => {
+    messagesContainer.appendChild(message);
+  });
+
+  document.getElementById("user-input").value = "";
+}
+
 function createBotMessage(message) {
   const botMessage = document.createElement("div");
   botMessage.textContent = message;
@@ -14,40 +47,51 @@ function createUserMessage(message) {
   return userMessage;
 }
 
+function createLoadingMessage() {
+  const loadingMessage = document.createElement("div");
+  loadingMessage.className = "loading-dots message-bubble-bot";
+  const dot1 = document.createElement("span");
+  dot1.className = "dot";
+  const dot2 = document.createElement("span");
+  dot2.className = "dot";
+  const dot3 = document.createElement("span");
+  dot3.className = "dot";
+
+  loadingMessage.appendChild(dot1);
+  loadingMessage.appendChild(dot2);
+  loadingMessage.appendChild(dot3);
+
+  return loadingMessage;
+}
+
+function addUserMessage() {
+  return (event) => {
+    if (event.key === "Enter") {
+      if (testScript[testScript.length - 1].role === "loading") {
+        testScript.pop();
+      }
+      const userInputValue = event.target.value;
+      testScript.push({ role: "user", content: userInputValue });
+      testScript.push({ role: "loading" });
+      renderMessages();
+    }
+  };
+}
+
 function createUserInput() {
   const userInput = document.createElement("input");
+  userInput.id = "user-input";
+  userInput.type = "text";
   userInput.className = "message-input";
   userInput.placeholder = "Ask ilLuMinate something...";
+  userInput.onkeydown = addUserMessage();
+
   return userInput;
 }
 
-const testScript = [
-  { role: "user", content: "Hello, how are you?" },
-  {
-    role: "assistant",
-    content: "I'm good, thank you for asking. How can I help you today?",
-  },
-];
-
-const popup = document.getElementById("popup");
-popup.className = "popup-body";
-const messagesContainer = document.createElement("div");
-
-const messages = testScript.map((message) => {
-  if (message.role === "user") {
-    return createUserMessage(message.content);
-  }
-  if (message.role === "assistant") {
-    return createBotMessage(message.content);
-  }
-});
-
 const userInput = createUserInput();
-
 messagesContainer.className = "messages-container";
-messages.forEach((message) => {
-  messagesContainer.appendChild(message);
-});
-
 popup.appendChild(messagesContainer);
 popup.appendChild(userInput);
+
+renderMessages(messagesContainer);
