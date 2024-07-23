@@ -1,18 +1,29 @@
+body {
+    margin: 0;
+}
+
+#popup {
+    margin: 1em;
+}
+
 input[type="text"]:focus {
   border: 1px solid #555;
   border-radius: 10px;
 }
 
 .popup-title {
-  font-size: 20px;
+  font-size: 2em;
+  color: #fff;
   margin-bottom: 10px;
+  padding: .6em;
+  background-color: #333;
 }
 
 .popup-body {
   display: flex;
   flex-direction: column;
   justify-content: space-between;
-  height: 500px;
+  height: 440px;
   width: 600px;
 }
 
