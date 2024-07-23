@@ -241,4 +241,42 @@ document.addEventListener("DOMContentLoaded", (event) => {
       }
     });
   });
+
+  const internalPopupHTML = `
+  <div id="internal-popup" class="internal-popup">
+    <div class="internal-popup-content">
+      <span class="close-internal">&times;</span>
+      <h2>Keyboard Shortcuts</h2>
+      <ul>
+        <li><strong>Ctrl + /</strong>: Open this shortcut popup</li>
+        <li><strong>Shift + Enter</strong>: Add a new line</li>
+        <li><strong>Enter</strong>: Submit message</li>
+      </ul>
+    </div>
+  </div>
+  `;
+
+  popup.insertAdjacentHTML('beforeend', internalPopupHTML);
+
+  const internalPopup = document.getElementById("internal-popup");
+  const closeInternalButton = document.querySelector(".close-internal");
+
+  // Open internal popup when 'Ctrl + /' is pressed
+  document.addEventListener('keydown', function(event) {
+    if (event.ctrlKey && event.key === '/') {
+      event.preventDefault();
+      internalPopup.style.display = "block";
+    }
+  });
+
+  closeInternalButton.onclick = function() {
+    internalPopup.style.display = "none";
+  };
+
+  window.onclick = function(event) {
+    if (event.target == internalPopup) {
+      internalPopup.style.display = "none";
+    }
+  };
 });
+  
