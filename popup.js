@@ -193,13 +193,15 @@ document.addEventListener('DOMContentLoaded', (event) => {
 
     chrome.tabs.query({currentWindow: true, active: true}, function (tabs) {
         var activeTab = tabs[0];
-        const response = chrome.tabs.sendMessage(activeTab.id, {action: "scrapePage"}, function(response){
-                //do something with content
-                console.log("response for page load");
-                console.log(response);
-                bodyText = response.content;
-                url = response.url;
-            });
+        chrome.tabs.sendMessage(activeTab.id, {action: "scrapePage"}, function(response){
+            //do something with content
+            console.log("response for page load");
+            console.log(response);
+            if (response != null) {
+              bodyText = response.content;
+              url = response.url;
+            }
+        });
     });
 });
 
