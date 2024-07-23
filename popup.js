@@ -7,25 +7,25 @@ let messageScript = [
 ];
 
 const generateLocalStorageKey = function (tabId) {
-    return `illuminate_${tabId}`;
+  return `illuminate_${tabId}`;
 };
 
 chrome.tabs.getCurrent((tab) => {
-    const tabId = tab.id;
-    const localStorageKey = generateLocalStorageKey(tabId);
-    chrome.storage.local.set({ [localStorageKey]: messageScript });
-    chrome.storage.local.get(localStorageKey, function (result) {
-        if (result[localStorageKey] !== undefined) {
-          messageScript = result[localStorageKey];
-          if (messageScript[messageScript.length - 1].role === "loading") {
-            messageScript.pop();
-          }
-          renderMessages(tabId);
-        } else {
-          chrome.storage.local.set({ [localStorageKey]: messageScript });
-        }
-      });
+  const tabId = tab.id;
+  const localStorageKey = generateLocalStorageKey(tabId);
+  chrome.storage.local.set({ [localStorageKey]: messageScript });
+  chrome.storage.local.get(localStorageKey, function (result) {
+    if (result[localStorageKey] !== undefined) {
+      messageScript = result[localStorageKey];
+      if (messageScript[messageScript.length - 1].role === "loading") {
+        messageScript.pop();
+      }
+      renderMessages(tabId);
+    } else {
+      chrome.storage.local.set({ [localStorageKey]: messageScript });
+    }
   });
+});
 
 const popup = document.getElementById("popup");
 popup.className = "popup-body";
@@ -96,78 +96,67 @@ function createLoadingMessage() {
 
 function addUserMessage() {
   return (event) => {
-    console.log(event);
-    if (event.key === "Enter") {
+    if (event.key === "Enter" && !event.shiftKey) {
+      event.preventDefault();
       if (messageScript[messageScript.length - 1].role === "loading") {
         messageScript.pop();
       }
-      const userInputValue = event.target.value;
+      const userInputValue = event.target.value.trim();
 
       if (userInputValue === "") return;
       messageScript.push({ role: "user", content: userInputValue });
       messageScript.push({ role: "loading" });
 
       renderMessages();
-      console.log(userInputValue);
-      console.log(bodyText);
-      console.log(url);
-      console.log(title);
-      // send and get response back
-      // Send the content to the background script
+
       let action =
-        conversationId === null ? "createConversation" : "continueConversation";
+          conversationId === null ? "createConversation" : "continueConversation";
       chrome.runtime.sendMessage(
-        {
-          action: action,
-          userMessage: userInputValue,
-          pageTitle: title,
-          pageURL: url,
-          pageContext: bodyText,
-          conversationId
-        },
-        (response) => {
-          messageScript.pop();
-          if (chrome.runtime.lastError) {
-            console.error(chrome.runtime.lastError.message);
-            messageScript.push({
-              role: "assistant",
-              content: "Sorry couldn't send data",
-            });
-            return;
-          }
+          {
+            action: action,
+            userMessage: userInputValue,
+            pageTitle: title,
+            pageURL: url,
+            pageContext: bodyText,
+            conversationId
+          },
+          (response) => {
+            messageScript.pop();
+            if (chrome.runtime.lastError) {
+              console.error(chrome.runtime.lastError.message);
+              messageScript.push({
+                role: "assistant",
+                content: "Sorry couldn't send data",
+              });
+              return;
+            }
 
-          console.log("Received response from background script:", response);
+            if (response.error) {
+              console.error("Error from AI API:", response.error);
+              return;
+            }
 
-          // const chatArea = document.getElementById('chatArea');
+            conversationId = response.conversationId;
+            if (
+                response.chatMessages &&
+                Array.isArray(response.chatMessages) &&
+                response.chatMessages.length > 1
+            ) {
+              const aiContent = response.chatMessages[response.chatMessages.length-1].content;
+              messageScript.push({ role: "assistant", content: aiContent });
+            } else {
+              console.error(
+                  "Invalid response format or empty content:",
+                  response
+              );
+              messageScript.push({
+                role: "assistant",
+                content: "Sorry, I couldn't understand the response.",
+              });
+            }
 
-          if (response.error) {
-            console.error("Error from AI API:", response.error);
-            return;
-          }
-
-          console.log(response);
-          conversationId = response.conversationId;
-          // Check if response content exists and is an array
-          if (
-            response.chatMessages &&
-            Array.isArray(response.chatMessages) &&
-            response.chatMessages.length > 1
-          ) {
-            const aiContent = response.chatMessages[response.chatMessages.length-1].content;
-            messageScript.push({ role: "assistant", content: aiContent });
-          } else {
-            console.error(
-              "Invalid response format or empty content:",
-              response
-            );
-            messageScript.push({
-              role: "assistant",
-              content: "Sorry, I couldn't understand the response.",
-            });
-          }
-
-        renderMessages();
-      });
+            renderMessages();
+          });
 
       renderMessages();
     }
@@ -175,9 +164,8 @@ function addUserMessage() {
 }
 
 function createUserInput() {
-  const userInput = document.createElement("input");
+  const userInput = document.createElement("textarea");
   userInput.id = "user-input";
-  userInput.type = "text";
   userInput.className = "message-input";
   userInput.placeholder = "Ask ilLuMinate something...";
   userInput.onkeydown = addUserMessage();
@@ -193,22 +181,21 @@ popup.appendChild(userInput);
 renderMessages(messagesContainer);
 
 document.addEventListener('DOMContentLoaded', (event) => {
-    userInput.focus();
+  userInput.focus();
 
-    chrome.tabs.query({currentWindow: true, active: true}, function (tabs) {
-        var activeTab = tabs[0];
-        chrome.tabs.sendMessage(activeTab.id, {action: "scrapePage"}, function(response){
-            //do something with content
-            console.log("response for page load");
-            console.log(response);
-            if (response != null) {
-              bodyText = response.content;
-              url = activeTab.url;
-              title = response.title;
-              console.log(bodyText);
-              console.log(url);
-              console.log(title);
-            }
-        });
+  chrome.tabs.query({currentWindow: true, active: true}, function (tabs) {
+    var activeTab = tabs[0];
+    chrome.tabs.sendMessage(activeTab.id, {action: "scrapePage"}, function(response){
+      console.log("response for page load");
+      console.log(response);
+      if (response != null) {
+        bodyText = response.content;
+        url = activeTab.url;
+        title = response.title;
+        console.log(bodyText);
+        console.log(url);
+        console.log(title);
+      }
     });
+  });
 });
