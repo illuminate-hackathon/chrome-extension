@@ -1,8 +1,8 @@
 let messageScript = [
-  { role: "user", content: "Hello, how are you?" },
+  { role: "user", content: "test user message" },
   {
     role: "assistant",
-    content: "I'm good, thank you for asking. How can I help you today?",
+    content: "Hello, how are you? \n testing new line",
   },
 ];
 
@@ -63,7 +63,7 @@ function renderMessages(tabId) {
 
 function createBotMessage(message) {
   const botMessage = document.createElement("div");
-  botMessage.textContent = message;
+  botMessage.innerHTML = message;
   botMessage.className = "message-bubble-bot";
 
   return botMessage;
@@ -110,53 +110,55 @@ function addUserMessage() {
       renderMessages();
 
       let action =
-          conversationId === null ? "createConversation" : "continueConversation";
+        conversationId === null ? "createConversation" : "continueConversation";
       chrome.runtime.sendMessage(
-          {
-            action: action,
-            userMessage: userInputValue,
-            pageTitle: title,
-            pageURL: url,
-            pageContext: bodyText,
-            conversationId
-          },
-          (response) => {
-            messageScript.pop();
-            if (chrome.runtime.lastError) {
-              console.error(chrome.runtime.lastError.message);
-              messageScript.push({
-                role: "assistant",
-                content: "Sorry couldn't send data",
-              });
-              return;
-            }
+        {
+          action: action,
+          userMessage: userInputValue,
+          pageTitle: title,
+          pageURL: url,
+          pageContext: bodyText,
+          conversationId,
+        },
+        (response) => {
+          messageScript.pop();
+          if (chrome.runtime.lastError) {
+            console.error(chrome.runtime.lastError.message);
+            messageScript.push({
+              role: "assistant",
+              content: "Sorry couldn't send data",
+            });
+            return;
+          }
 
-            if (response.error) {
-              console.error("Error from AI API:", response.error);
-              return;
-            }
+          if (response.error) {
+            console.error("Error from AI API:", response.error);
+            return;
+          }
 
-            conversationId = response.conversationId;
-            if (
-                response.chatMessages &&
-                Array.isArray(response.chatMessages) &&
-                response.chatMessages.length > 1
-            ) {
-              const aiContent = response.chatMessages[response.chatMessages.length-1].content;
-              messageScript.push({ role: "assistant", content: aiContent });
-            } else {
-              console.error(
-                  "Invalid response format or empty content:",
-                  response
-              );
-              messageScript.push({
-                role: "assistant",
-                content: "Sorry, I couldn't understand the response.",
-              });
-            }
+          conversationId = response.conversationId;
+          if (
+            response.chatMessages &&
+            Array.isArray(response.chatMessages) &&
+            response.chatMessages.length > 1
+          ) {
+            const aiContent =
+              response.chatMessages[response.chatMessages.length - 1].content;
+            messageScript.push({ role: "assistant", content: aiContent });
+          } else {
+            console.error(
+              "Invalid response format or empty content:",
+              response
+            );
+            messageScript.push({
+              role: "assistant",
+              content: "Sorry, I couldn't understand the response.",
+            });
+          }
 
-            renderMessages();
-          });
+          renderMessages();
+        }
+      );
 
       renderMessages();
     }
@@ -180,22 +182,26 @@ popup.appendChild(userInput);
 
 renderMessages(messagesContainer);
 
-document.addEventListener('DOMContentLoaded', (event) => {
+document.addEventListener("DOMContentLoaded", (event) => {
   userInput.focus();
 
-  chrome.tabs.query({currentWindow: true, active: true}, function (tabs) {
+  chrome.tabs.query({ currentWindow: true, active: true }, function (tabs) {
     var activeTab = tabs[0];
-    chrome.tabs.sendMessage(activeTab.id, {action: "scrapePage"}, function(response){
-      console.log("response for page load");
-      console.log(response);
-      if (response != null) {
-        bodyText = response.content;
-        url = activeTab.url;
-        title = response.title;
-        console.log(bodyText);
-        console.log(url);
-        console.log(title);
+    chrome.tabs.sendMessage(
+      activeTab.id,
+      { action: "scrapePage" },
+      function (response) {
+        console.log("response for page load");
+        console.log(response);
+        if (response != null) {
+          bodyText = response.content;
+          url = activeTab.url;
+          title = response.title;
+          console.log(bodyText);
+          console.log(url);
+          console.log(title);
+        }
       }
-    });
+    );
   });
 });
