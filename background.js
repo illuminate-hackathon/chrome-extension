@@ -1,6 +1,6 @@
 console.log('Background service worker loaded');
 
-const BASE_API_URL = "http://localhost:8123";
+const BASE_API_URL = "http://127.0.0.1:55069";
 const SYSTEM_PROMPT = chrome.runtime.getURL('system-prompt.txt');
 
 // In-memory conversation history storage (keyed by conversation id)
@@ -14,7 +14,7 @@ async function getSystemPrompt(pageTitle, pageURL, pageContext) {
         .replace("__PAGE_CONTEXT__", pageContext);
 }
 
-async function createConversation({ userMessage, pageTitle, pageURL, pageContext }) {
+async function createConversation({userMessage, pageTitle, pageURL, pageContext}) {
 
     // Prepare the request body
     const body = {
@@ -33,7 +33,7 @@ async function createConversation({ userMessage, pageTitle, pageURL, pageContext
     });
     const conversation = await conversationResponse.json();
     CONVERSATION_HISTORY[conversation.conversationId] = conversation;
-    return CONVERSATION_HISTORY[conversation.conversationId];
+    return {conversation: CONVERSATION_HISTORY[conversation.conversationId], conversationId: conversation.conversationId};
 }
 
 async function continueConversation(conversationId, userMessage) {
@@ -54,7 +54,7 @@ async function continueConversation(conversationId, userMessage) {
     });
     const conversation = await conversationResponse.json();
     CONVERSATION_HISTORY[conversation.conversationId] = conversation;
-    return CONVERSATION_HISTORY[conversation.conversationId];
+    return {conversation: CONVERSATION_HISTORY[conversation.conversationId], conversationId: conversation.conversationId};
 }
 
 chrome.runtime.onInstalled.addListener(() => {
@@ -63,8 +63,8 @@ chrome.runtime.onInstalled.addListener(() => {
 
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     if (request.action === "createConversation") {
-        const { userMessage, pageContext } = request;
-        createConversation(userMessage, pageContext)
+        const { userMessage, pageContext, pageURL, pageTitle } = request;
+        createConversation({userMessage, pageTitle, pageURL, pageContext})
             .then(conversation => sendResponse(conversation));
         return true;
     }
