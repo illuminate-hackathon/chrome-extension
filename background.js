@@ -1,50 +1,55 @@
 console.log('Background service worker loaded');
 
-const BASE_API_URL = "https://api.amazon.com/bedrock/v1";
-const AWS_ACCESS_KEY_ID = "";
-const MODEL_ID = "anthropic.claude-3.5-sonnet-20240620-v1:0";
+const BASE_API_URL = "http:localhost:8123";
 const SYSTEM_PROMPT = ""; // TODO
 
-// In-memory conversation history storage
-const CONVERSATION_HISTORY = [];
+// In-memory conversation history storage (keyed by conversation id)
+const CONVERSATION_HISTORY = {};
 
-async function converse(userMessage) {
 
-    CONVERSATION_HISTORY.push({
-        role: "user",
-        content: [
-            {
-                text: userMessage,
-            }
-        ],
-    })
+async function createConversation(userMessage) {
 
-    const params = {
-        messages: CONVERSATION_HISTORY,
-        system: [ 
-           {
-            text: SYSTEM_PROMPT,
-           }
-        ],
-     }
+    // Prepare the request body
+    const body = {
+        context: SYSTEM_PROMPT,
+        userPrompt: userMessage,
+    };
 
-     const bedrockRuntime = new AWS.BedrockRuntime();
-     
-     bedrockRuntime.converse(params, function(err, data) {
-        if (err) {
-            console.log(err, err.stack);
-            CONVERSATION_HISTORY.push({
-                role: "system",
-                content: [
-                    {
-                        text: "I'm sorry, I'm having trouble connecting to the server. Please try again later.",
-                    }
-                ],
-            })
-        } else {
-            CONVERSATION_HISTORY.push(data.output.message);
-        }
-     });
+    // Make the API request to ilLuMinate
+    return await fetch(`${BASE_API_URL}/api/conversations`, {
+            method: 'POST',
+            body: JSON.stringify(body),
+            headers: {
+                'Accept': 'application/json',
+                'Content-Type': 'application/json',
+            },
+        })
+        .then(response => JSON.parse(response.json()))
+        .then(conversation => {
+            CONVERSATION_HISTORY[conversation.conversationId] = conversation;
+            return CONVERSATION_HISTORY[conversation.conversationId];
+        });
+}
 
-     return CONVERSATION_HISTORY;
+async function continueConversation(conversationId, userMessage) {
+
+    // Prepare the request body
+    const body = {
+        userPrompt: userMessage,
+    };
+
+    // Make the API request to ilLuMinate
+    return await fetch(`${BASE_API_URL}/api/conversations/${conversationId}`, {
+            method: 'PATCH',
+            body: JSON.stringify(body),
+            headers: {
+                'Accept': 'application/json',
+                'Content-Type': 'application/json',
+            },
+        })
+        .then(response => JSON.parse(response.json()))
+        .then(conversation => {
+            CONVERSATION_HISTORY[conversation.conversationId] = conversation;
+            return CONVERSATION_HISTORY[conversation.conversationId];
+        });
 }
