@@ -149,18 +149,6 @@ renderMessages(messagesContainer);
 document.addEventListener('DOMContentLoaded', (event) => {
     userInput.focus();
 
-    userInput.addEventListener('keydown', (e) => {
-        if (e.key === 'Escape') {
-            window.close();
-        } else if (e.key === 'Enter') {
-            performSearch(userInput.value);
-        }
-    });
-
-    function performSearch(query) {
-        console.log('Searching for:', query);
-    }
-
     chrome.tabs.query({currentWindow: true, active: true}, function (tabs){
         var activeTab = tabs[0];
         const response = chrome.tabs.sendMessage(activeTab.id, {action: "scrapePage"}, function(response){
