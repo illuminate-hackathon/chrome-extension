@@ -23,6 +23,7 @@ popup.className = "popup-body";
 const messagesContainer = document.createElement("div");
 messagesContainer.id = "messages-container";
 let bodyText = "";
+let url = "";
 let conversationId = null;
 
 function renderMessages() {
@@ -106,7 +107,7 @@ function addUserMessage() {
           action: action,
           userMessage: userInputValue,
           pageTitle: "",
-          pageURL: window.location.href,
+          pageURL: url,
           pageContext: bodyText,
           conversationId
         },
@@ -190,11 +191,14 @@ renderMessages(messagesContainer);
 document.addEventListener('DOMContentLoaded', (event) => {
     userInput.focus();
 
-    chrome.tabs.query({currentWindow: true, active: true}, function (tabs){
+    chrome.tabs.query({currentWindow: true, active: true}, function (tabs) {
         var activeTab = tabs[0];
         const response = chrome.tabs.sendMessage(activeTab.id, {action: "scrapePage"}, function(response){
                 //do something with content
+                console.log("response for page load");
                 console.log(response);
+                bodyText = response.content;
+                url = response.url;
             });
     });
 });
