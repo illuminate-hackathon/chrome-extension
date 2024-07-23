@@ -9,6 +9,8 @@ let messageScript = [
 const popup = document.getElementById("popup");
 popup.className = "popup-body";
 const messagesContainer = document.createElement("div");
+messagesContainer.id = "messages-container";
+let bodyText = "";
 
 function renderMessages() {
   messagesContainer.innerHTML = "";
@@ -66,6 +68,7 @@ function createLoadingMessage() {
 
 function addUserMessage() {
   return (event) => {
+    console.log(event);
     if (event.key === "Enter") {
       if (messageScript[messageScript.length - 1].role === "loading") {
         messageScript.pop();
@@ -74,17 +77,40 @@ function addUserMessage() {
       if (userInputValue === "") return;
       messageScript.push({ role: "user", content: userInputValue });
       messageScript.push({ role: "loading" });
-      // send and get response back, replace with actual response
-      setTimeout(() => {
+      console.log(userInputValue);
+      // send and get response back
+      // Send the content to the background script
+      chrome.runtime.sendMessage({ action: "createConversation", userMessage: userInputValue, pageTitle: "", pageURL: window.location.href, pageContext: bodyText }, (response) => {
         messageScript.pop();
-        messageScript.push({
-          role: "assistant",
-          content: "I'm sorry, I don't have an answer for that yet.",
-        });
-        renderMessages();
-      }, 2000);
+        if (chrome.runtime.lastError) {
+          console.error(chrome.runtime.lastError.message);
+          messageScript.push({role: "assistant", content: "Sorry couldn't send data"});
+          return;
+        }
 
-      renderMessages();
+        console.log("Received response from background script:", response);
+
+        // const chatArea = document.getElementById('chatArea');
+
+        if (response.error) {
+          console.error("Error from AI API:", response.error);
+          return;
+        }
+
+        // Check if response content exists and is an array
+        if (response.response.content && Array.isArray(
+            response.response.content) && response.response.content.length
+            > 0) {
+          const aiContent = response.response.content[0].text;
+          messageScript.push({role: "assistant", content: aiContent});
+        } else {
+          console.error("Invalid response format or empty content:",
+              response.response);
+          messageScript.push({role: "assistant", content: "Sorry, I couldn't understand the response."});
+        }
+
+        renderMessages();
+      });
     }
   };
 }
@@ -100,9 +126,21 @@ function createUserInput() {
   return userInput;
 }
 
+
+function setup() {
+  scrapeContent();
+}
+
+// Function to scrape the page content
+function scrapeContent() {
+  console.log("getting body text");
+  bodyText = document.body.innerText;
+}
+
 const userInput = createUserInput();
 messagesContainer.className = "messages-container";
 popup.appendChild(messagesContainer);
 popup.appendChild(userInput);
 
 renderMessages(messagesContainer);
+setup();
