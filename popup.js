@@ -13,24 +13,6 @@ const generateLocalStorageKeyForConversationId = function (tabId) {
   return `illuminate_conv_id_${tabId}`;
 };
 
-/*chrome.tabs.getCurrent((tab) => {
-  const tabId = tab.id;
-  console.log("tabid: " + tabId);
-  const localStorageKey = generateLocalStorageKey(tabId);
-  chrome.storage.local.set({ [localStorageKey]: messageScript });
-  chrome.storage.local.get(localStorageKey, function (result) {
-    if (result[localStorageKey] !== undefined) {
-      messageScript = result[localStorageKey];
-      if (messageScript[messageScript.length - 1].role === "loading") {
-        messageScript.pop();
-      }
-      renderMessages(tabId);
-    } else {
-      chrome.storage.local.set({ [localStorageKey]: messageScript });
-    }
-  });
-});*/
-
 const popup = document.getElementById("popup");
 popup.className = "popup-body";
 const messagesContainer = document.createElement("div");
