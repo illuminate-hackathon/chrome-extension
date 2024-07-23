@@ -1,4 +1,4 @@
-let testScript = [
+let messageScript = [
   { role: "user", content: "Hello, how are you?" },
   {
     role: "assistant",
@@ -12,7 +12,7 @@ const messagesContainer = document.createElement("div");
 
 function renderMessages() {
   messagesContainer.innerHTML = "";
-  const messages = testScript.map((message) => {
+  const messages = messageScript.map((message) => {
     if (message.role === "user") {
       return createUserMessage(message.content);
     }
@@ -67,12 +67,22 @@ function createLoadingMessage() {
 function addUserMessage() {
   return (event) => {
     if (event.key === "Enter") {
-      if (testScript[testScript.length - 1].role === "loading") {
-        testScript.pop();
+      if (messageScript[messageScript.length - 1].role === "loading") {
+        messageScript.pop();
       }
       const userInputValue = event.target.value;
-      testScript.push({ role: "user", content: userInputValue });
-      testScript.push({ role: "loading" });
+      messageScript.push({ role: "user", content: userInputValue });
+      messageScript.push({ role: "loading" });
+      // send and get response back, replace with actual response
+      setTimeout(() => {
+        messageScript.pop();
+        messageScript.push({
+          role: "assistant",
+          content: "I'm sorry, I don't have an answer for that yet.",
+        });
+        renderMessages();
+      }, 2000);
+
       renderMessages();
     }
   };
