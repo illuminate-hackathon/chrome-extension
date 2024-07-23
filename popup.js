@@ -108,6 +108,7 @@ function addUserMessage() {
           pageTitle: "",
           pageURL: window.location.href,
           pageContext: bodyText,
+          conversationId
         },
         (response) => {
           messageScript.pop();
@@ -185,17 +186,17 @@ popup.appendChild(messagesContainer);
 popup.appendChild(userInput);
 
 renderMessages(messagesContainer);
-//
-// document.addEventListener('DOMContentLoaded', (event) => {
-//     userInput.focus();
-//
-//     chrome.tabs.query({currentWindow: true, active: true}, function (tabs){
-//         var activeTab = tabs[0];
-//         const response = chrome.tabs.sendMessage(activeTab.id, {action: "scrapePage"}, function(response){
-//                 //do something with content
-//                 console.log(response)
-//             });
-//     });
-// });
+
+document.addEventListener('DOMContentLoaded', (event) => {
+    userInput.focus();
+
+    chrome.tabs.query({currentWindow: true, active: true}, function (tabs){
+        var activeTab = tabs[0];
+        const response = chrome.tabs.sendMessage(activeTab.id, {action: "scrapePage"}, function(response){
+                //do something with content
+                console.log(response);
+            });
+    });
+});
 
 setup();
