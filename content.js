@@ -5,8 +5,10 @@ chrome.runtime.onMessage.addListener(
                   "from a content script:" + sender.tab.url :
                   "from the extension");
       console.log("hitting end: ", document.body.innerText)
-      if (request.action === "scrapePage")
-        sendResponse({url: sender.tab.url, content: document.body.innerText});
+      if (request.action === "scrapePage") {
+        sendResponse({title: document.title, content: document.body.innerText});
+        //sendResponse(document.body.innerText);
+      }
       return true;
     }
   );

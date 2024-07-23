@@ -22,8 +22,9 @@ const popup = document.getElementById("popup");
 popup.className = "popup-body";
 const messagesContainer = document.createElement("div");
 messagesContainer.id = "messages-container";
-let bodyText = "";
-let url = "";
+let bodyText = null;
+let url = null;
+let title = null;
 let conversationId = null;
 
 function renderMessages() {
@@ -98,6 +99,9 @@ function addUserMessage() {
 
       renderMessages();
       console.log(userInputValue);
+      console.log(bodyText);
+      console.log(url);
+      console.log(title);
       // send and get response back
       // Send the content to the background script
       let action =
@@ -106,7 +110,7 @@ function addUserMessage() {
         {
           action: action,
           userMessage: userInputValue,
-          pageTitle: "",
+          pageTitle: title,
           pageURL: url,
           pageContext: bodyText,
           conversationId
@@ -171,16 +175,6 @@ function createUserInput() {
   return userInput;
 }
 
-function setup() {
-  scrapeContent();
-}
-
-// Function to scrape the page content
-function scrapeContent() {
-  console.log("getting body text");
-  bodyText = document.body.innerText;
-}
-
 const userInput = createUserInput();
 messagesContainer.className = "messages-container";
 popup.appendChild(messagesContainer);
@@ -199,10 +193,12 @@ document.addEventListener('DOMContentLoaded', (event) => {
             console.log(response);
             if (response != null) {
               bodyText = response.content;
-              url = response.url;
+              url = activeTab.url;
+              title = response.title;
+              console.log(bodyText);
+              console.log(url);
+              console.log(title);
             }
         });
     });
 });
-
-setup();
