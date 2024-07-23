@@ -1,39 +1,39 @@
 console.log('Background service worker loaded');
 
-const BASE_API_URL = "http:localhost:8123";
+const BASE_API_URL = "http://localhost:8123";
 const SYSTEM_PROMPT = chrome.runtime.getURL('system-prompt.txt');
 
 // In-memory conversation history storage (keyed by conversation id)
 const CONVERSATION_HISTORY = {};
 
-async function getSystemPrompt(pageContext) {
-    return await fetch(SYSTEM_PROMPT)
-        .then(response => response.text())
-        .then(systemPrompt => systemPrompt + '\n' + pageContext);
+async function getSystemPrompt(pageTitle, pageURL, pageContext) {
+    const systemPromptTemplate = await fetch(SYSTEM_PROMPT)
+        .then(response => response.text());
+    return systemPromptTemplate.replace("__PAGE_TITLE__", pageTitle)
+        .replace("__PAGE_URL__", pageURL)
+        .replace("__PAGE_CONTEXT__", pageContext);
 }
 
-async function createConversation(userMessage, pageContext) {
+async function createConversation({ userMessage, pageTitle, pageURL, pageContext }) {
 
     // Prepare the request body
     const body = {
-        context: getSystemPrompt(pageContext),
+        context: getSystemPrompt(pageTitle, pageURL, pageContext),
         userPrompt: userMessage,
     };
 
     // Make the API request to ilLuMinate
-    return await fetch(`${BASE_API_URL}/api/conversations`, {
-            method: 'POST',
-            body: JSON.stringify(body),
-            headers: {
-                'Accept': 'application/json',
-                'Content-Type': 'application/json',
-            },
-        })
-        .then(response => JSON.parse(response.json()))
-        .then(conversation => {
-            CONVERSATION_HISTORY[conversation.conversationId] = conversation;
-            return CONVERSATION_HISTORY[conversation.conversationId];
-        });
+    const conversationResponse = await fetch(`${BASE_API_URL}/api/conversations`, {
+        method: 'POST',
+        body: JSON.stringify(body),
+        headers: {
+            'Accept': 'application/json',
+            'Content-Type': 'application/json',
+        },
+    });
+    const conversation = await conversationResponse.json();
+    CONVERSATION_HISTORY[conversation.conversationId] = conversation;
+    return CONVERSATION_HISTORY[conversation.conversationId];
 }
 
 async function continueConversation(conversationId, userMessage) {
@@ -44,19 +44,17 @@ async function continueConversation(conversationId, userMessage) {
     };
 
     // Make the API request to ilLuMinate
-    return await fetch(`${BASE_API_URL}/api/conversations/${conversationId}`, {
-            method: 'PATCH',
-            body: JSON.stringify(body),
-            headers: {
-                'Accept': 'application/json',
-                'Content-Type': 'application/json',
-            },
-        })
-        .then(response => JSON.parse(response.json()))
-        .then(conversation => {
-            CONVERSATION_HISTORY[conversation.conversationId] = conversation;
-            return CONVERSATION_HISTORY[conversation.conversationId];
-        });
+    const conversationResponse = await fetch(`${BASE_API_URL}/api/conversations/${conversationId}`, {
+        method: 'PATCH',
+        body: JSON.stringify(body),
+        headers: {
+            'Accept': 'application/json',
+            'Content-Type': 'application/json',
+        },
+    });
+    const conversation = await conversationResponse.json();
+    CONVERSATION_HISTORY[conversation.conversationId] = conversation;
+    return CONVERSATION_HISTORY[conversation.conversationId];
 }
 
 chrome.runtime.onInstalled.addListener(() => {
