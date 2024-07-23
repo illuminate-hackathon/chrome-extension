@@ -38,11 +38,9 @@ const createConversation = async function ({ userPrompt, pageTitle, pageURL, pag
     return await conversationResponse.json();
 }
 
-const continueConversation = async function ({ conversationId, userMessage }) {
+const continueConversation = async function ({ conversationId, userPrompt }) {
     // Prepare the request body
-    const body = {
-        userPrompt: userMessage,
-    };
+    const body = { userPrompt };
 
     // Make the API request to ilLuMinate
     const conversationResponse = await fetch(
@@ -60,16 +58,16 @@ chrome.runtime.onInstalled.addListener(() => {
 });
 
 // Listen for messages from the popup
-chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
+chrome.runtime.onMessage.addListener((request, _, sendResponse) => {
     if (request.action === "createConversation") {
-        const { userMessage, pageContext, pageURL, pageTitle } = request;
-        createConversation({userPrompt:userMessage, pageTitle, pageURL, pageContext})
+        const { userMessage: userPrompt, pageContext, pageURL, pageTitle } = request;
+        createConversation({ userPrompt, pageTitle, pageURL, pageContext })
             .then(conversation => sendResponse(conversation));
         return true;
     }
     if (request.action === 'continueConversation') {
-        const { conversationId, userMessage } = request;
-        continueConversation({ conversationId, userMessage })
+        const { conversationId, userMessage: userPrompt } = request;
+        continueConversation({ conversationId, userPrompt })
             .then(conversation => sendResponse(conversation));
         return true;
     }
