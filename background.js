@@ -7,9 +7,6 @@ const HEADERS = {
 };
 const SYSTEM_PROMPT = chrome.runtime.getURL('system-prompt.txt');
 
-// In-memory conversation history storage (keyed by conversation id)
-const CONVERSATION_HISTORY = {};
-
 async function generateSystemPrompt(pageTitle, pageURL, pageContext) {
     const systemPromptTemplate = await fetch(SYSTEM_PROMPT)
         .then(response => response.text());
@@ -29,9 +26,7 @@ async function createConversation({ userMessage: userPrompt, pageTitle, pageURL,
         body: JSON.stringify(body),
         headers: HEADERS,
     });
-    const conversation = await conversationResponse.json();
-    CONVERSATION_HISTORY[conversation.conversationId] = conversation;
-    return conversation;
+    return await conversationResponse.json();
 }
 
 async function continueConversation(conversationId, userMessage) {
@@ -46,9 +41,7 @@ async function continueConversation(conversationId, userMessage) {
         body: JSON.stringify(body),
         headers: HEADERS,
     });
-    const conversation = await conversationResponse.json();
-    CONVERSATION_HISTORY[conversation.conversationId] = conversation;
-    return conversation;
+    return await conversationResponse.json();
 }
 
 chrome.runtime.onInstalled.addListener(() => {
