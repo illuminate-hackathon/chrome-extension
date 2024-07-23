@@ -6,6 +6,14 @@ let messageScript = [
   },
 ];
 
+// chrome.storage.local.get("storedMessages", function (res) {
+//   if (res.storedMessages !== undefined) {
+//     messageScript = res.storedMessages;
+//   } else {
+//     chrome.storage.local.set({ storedMessages: messageScript });
+//   }
+// });
+
 const popup = document.getElementById("popup");
 popup.className = "popup-body";
 const messagesContainer = document.createElement("div");
@@ -32,6 +40,7 @@ function renderMessages() {
   });
 
   document.getElementById("user-input").value = "";
+  // chrome.storage.local.set({ storedMessages: messageScript });
 }
 
 function createBotMessage(message) {

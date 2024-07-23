@@ -1,66 +1,65 @@
 console.log('Background service worker loaded');
 
-const BASE_API_URL = "http://127.0.0.1:55069";
-const SYSTEM_PROMPT = chrome.runtime.getURL('system-prompt.txt');
+const BASE_API_URL = 'http://localhost:8123';
+const HEADERS = {
+    'Accept': 'application/json',
+    'Content-Type': 'application/json',
+};
 
-// In-memory conversation history storage (keyed by conversation id)
-const CONVERSATION_HISTORY = {};
-
-async function getSystemPrompt(pageTitle, pageURL, pageContext) {
-    const systemPromptTemplate = await fetch(SYSTEM_PROMPT)
+const generateSystemPrompt = async function (pageTitle, pageURL, pageContext) {
+    const systemPromptURL = chrome.runtime.getURL('system-prompt.txt');
+    const systemPromptTemplate = await fetch(systemPromptURL)
         .then(response => response.text());
-    return systemPromptTemplate.replace("__PAGE_TITLE__", pageTitle)
-        .replace("__PAGE_URL__", pageURL)
-        .replace("__PAGE_CONTEXT__", pageContext);
+    return systemPromptTemplate.replace('__PAGE_TITLE__', pageTitle)
+        .replace('__PAGE_URL__', pageURL)
+        .replace('__PAGE_CONTEXT__', pageContext);
 }
 
-async function createConversation({userMessage, pageTitle, pageURL, pageContext}) {
+const requestOptions = function (method, body) {
+    return {
+        method,
+        body: JSON.stringify(body),
+        headers: HEADERS,
+    };
+}
 
+const createConversation = async function ({ userPrompt, pageTitle, pageURL, pageContext }) {
+    // Prepare the request body
+    const context = await generateSystemPrompt(pageTitle, pageURL, pageContext);
+    const body = { context, userPrompt };
+
+    // Make the API request to ilLuMinate
+    const conversationResponse = await fetch(
+        `${BASE_API_URL}/api/conversations`,
+        requestOptions('POST', body)
+    );
+
+    // Return the response
+    return await conversationResponse.json();
+}
+
+const continueConversation = async function ({ conversationId, userMessage }) {
     // Prepare the request body
     const body = {
-        context: getSystemPrompt(pageTitle, pageURL, pageContext),
         userPrompt: userMessage,
     };
 
     // Make the API request to ilLuMinate
-    const conversationResponse = await fetch(`${BASE_API_URL}/api/conversations`, {
-        method: 'POST',
-        body: JSON.stringify(body),
-        headers: {
-            'Accept': 'application/json',
-            'Content-Type': 'application/json',
-        },
-    });
-    const conversation = await conversationResponse.json();
-    CONVERSATION_HISTORY[conversation.conversationId] = conversation;
-    return {conversation: CONVERSATION_HISTORY[conversation.conversationId], conversationId: conversation.conversationId};
+    const conversationResponse = await fetch(
+        `${BASE_API_URL}/api/conversations/${conversationId}`,
+        requestOptions('PATCH', body)
+    );
+
+    // Return the response
+    return await conversationResponse.json();
 }
 
-async function continueConversation(conversationId, userMessage) {
-
-    // Prepare the request body
-    const body = {
-        userPrompt: userMessage,
-    };
-
-    // Make the API request to ilLuMinate
-    const conversationResponse = await fetch(`${BASE_API_URL}/api/conversations/${conversationId}`, {
-        method: 'PATCH',
-        body: JSON.stringify(body),
-        headers: {
-            'Accept': 'application/json',
-            'Content-Type': 'application/json',
-        },
-    });
-    const conversation = await conversationResponse.json();
-    CONVERSATION_HISTORY[conversation.conversationId] = conversation;
-    return {conversation: CONVERSATION_HISTORY[conversation.conversationId], conversationId: conversation.conversationId};
-}
-
+// Listen for the extension being installed
 chrome.runtime.onInstalled.addListener(() => {
     console.log("ilLuMinate installed.");
 });
 
+// Listen for messages from the popup
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     if (request.action === "createConversation") {
         const { userMessage, pageContext, pageURL, pageTitle } = request;
@@ -68,9 +67,9 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
             .then(conversation => sendResponse(conversation));
         return true;
     }
-    if (request.action === "continueConversation") {
+    if (request.action === 'continueConversation') {
         const { conversationId, userMessage } = request;
-        continueConversation(conversationId, userMessage)
+        continueConversation({ conversationId, userMessage })
             .then(conversation => sendResponse(conversation));
         return true;
     }

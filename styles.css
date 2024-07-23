@@ -18,8 +18,11 @@ input[type="text"]:focus {
 }
 
 .messages-container {
+  overflow: auto;
+  height: 450px;
   display: flex;
   flex-direction: column;
+  padding-right: 8px;
 }
 
 .message-bubble-user {
