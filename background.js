@@ -63,7 +63,7 @@ chrome.runtime.onInstalled.addListener(() => {
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     if (request.action === "createConversation") {
         const { userMessage, pageContext, pageURL, pageTitle } = request;
-        createConversation({userMessage, pageTitle, pageURL, pageContext})
+        createConversation({userPrompt:userMessage, pageTitle, pageURL, pageContext})
             .then(conversation => sendResponse(conversation));
         return true;
     }

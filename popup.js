@@ -146,11 +146,10 @@ function addUserMessage() {
             });
           }
 
-          renderMessages();
-        },
-        2000
-      );
-      s;
+        renderMessages();
+      });
+
+      renderMessages();
     }
   };
 }
