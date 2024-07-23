@@ -20,6 +20,7 @@ popup.className = "popup-body";
 const messagesContainer = document.createElement("div");
 messagesContainer.id = "messages-container";
 let bodyText = "";
+let conversationId = null;
 
 function renderMessages() {
   messagesContainer.innerHTML = "";
@@ -93,9 +94,11 @@ function addUserMessage() {
       console.log(userInputValue);
       // send and get response back
       // Send the content to the background script
+      let action =
+        conversationId === null ? "createConversation" : "continueConversation";
       chrome.runtime.sendMessage(
         {
-          action: "createConversation",
+          action: action,
           userMessage: userInputValue,
           pageTitle: "",
           pageURL: window.location.href,
@@ -121,13 +124,14 @@ function addUserMessage() {
             return;
           }
 
+          conversationId = response.response.conversationId;
           // Check if response content exists and is an array
           if (
-            response.response.content &&
-            Array.isArray(response.response.content) &&
-            response.response.content.length > 0
+            response.response.conversation &&
+            Array.isArray(response.response.conversation) &&
+            response.response.conversation.length > 0
           ) {
-            const aiContent = response.response.content[0].text;
+            const aiContent = response.response.conversation[0].text;
             messageScript.push({ role: "assistant", content: aiContent });
           } else {
             console.error(
@@ -144,6 +148,7 @@ function addUserMessage() {
         },
         2000
       );
+      s;
     }
   };
 }
@@ -175,21 +180,17 @@ popup.appendChild(messagesContainer);
 popup.appendChild(userInput);
 
 renderMessages(messagesContainer);
-
-document.addEventListener("DOMContentLoaded", (event) => {
-  userInput.focus();
-
-  chrome.tabs.query({ currentWindow: true, active: true }, function (tabs) {
-    var activeTab = tabs[0];
-    const response = chrome.tabs.sendMessage(
-      activeTab.id,
-      { action: "scrapePage" },
-      function (response) {
-        //do something with content
-        console.log(response);
-      }
-    );
-  });
-});
+//
+// document.addEventListener('DOMContentLoaded', (event) => {
+//     userInput.focus();
+//
+//     chrome.tabs.query({currentWindow: true, active: true}, function (tabs){
+//         var activeTab = tabs[0];
+//         const response = chrome.tabs.sendMessage(activeTab.id, {action: "scrapePage"}, function(response){
+//                 //do something with content
+//                 console.log(response)
+//             });
+//     });
+// });
 
 setup();
