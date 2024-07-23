@@ -42,6 +42,8 @@ function renderMessages() {
 
   document.getElementById("user-input").value = "";
   chrome.storage.local.set({ storedMessages: messageScript });
+
+  messagesContainer.lastChild.scrollIntoView();
 }
 
 function createBotMessage(message) {
