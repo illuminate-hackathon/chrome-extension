@@ -6,17 +6,26 @@ let messageScript = [
   },
 ];
 
-chrome.storage.local.get("storedMessages", function (res) {
-  if (res.storedMessages !== undefined) {
-    messageScript = res.storedMessages;
-    if (messageScript[messageScript.length - 1].role === "loading") {
-      messageScript.pop();
-    }
-    renderMessages();
-  } else {
-    chrome.storage.local.set({ storedMessages: messageScript });
-  }
-});
+const generateLocalStorageKey = function (tabId) {
+    return `illuminate_${tabId}`;
+};
+
+chrome.tabs.getCurrent((tab) => {
+    const tabId = tab.id;
+    const localStorageKey = generateLocalStorageKey(tabId);
+    chrome.storage.local.set({ [localStorageKey]: messageScript });
+    chrome.storage.local.get(localStorageKey, function (result) {
+        if (result[localStorageKey] !== undefined) {
+          messageScript = result[localStorageKey];
+          if (messageScript[messageScript.length - 1].role === "loading") {
+            messageScript.pop();
+          }
+          renderMessages(tabId);
+        } else {
+          chrome.storage.local.set({ [localStorageKey]: messageScript });
+        }
+      });
+  });
 
 const popup = document.getElementById("popup");
 popup.className = "popup-body";
@@ -27,7 +36,7 @@ let url = null;
 let title = null;
 let conversationId = null;
 
-function renderMessages() {
+function renderMessages(tabId) {
   messagesContainer.innerHTML = "";
   const messages = messageScript.map((message) => {
     if (message.role === "user") {
@@ -46,7 +55,8 @@ function renderMessages() {
   });
 
   document.getElementById("user-input").value = "";
-  chrome.storage.local.set({ storedMessages: messageScript });
+  const localStorageKey = generateLocalStorageKey(tabId);
+  chrome.storage.local.set({ [localStorageKey]: messageScript });
 
   messagesContainer.lastChild.scrollIntoView();
 }
