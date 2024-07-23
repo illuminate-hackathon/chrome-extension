@@ -11,7 +11,7 @@ const generateLocalStorageKey = function (tabId) {
 };
 
 chrome.tabs.getCurrent((tab) => {
-  const tabId = tab.id;
+  const tabId = "test";
   const localStorageKey = generateLocalStorageKey(tabId);
   chrome.storage.local.set({ [localStorageKey]: messageScript });
   chrome.storage.local.get(localStorageKey, function (result) {
@@ -128,11 +128,17 @@ function addUserMessage() {
                 role: "assistant",
                 content: "Sorry couldn't send data",
               });
+              renderMessages();
               return;
             }
 
-            if (response.error) {
-              console.error("Error from AI API:", response.error);
+            if (response === null || response?.error) {
+              console.log("Error from AI API");
+              messageScript.push({
+                role: "assistant",
+                content: "Sorry couldn't get data",
+              });
+              renderMessages();
               return;
             }
 
@@ -157,8 +163,6 @@ function addUserMessage() {
 
             renderMessages();
           });
-
-      renderMessages();
     }
   };
 }
