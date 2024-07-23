@@ -9,6 +9,9 @@ let messageScript = [
 chrome.storage.local.get("storedMessages", function (res) {
   if (res.storedMessages !== undefined) {
     messageScript = res.storedMessages;
+    if (messageScript[messageScript.length - 1].role === "loading") {
+      messageScript.pop();
+    }
     renderMessages();
   } else {
     chrome.storage.local.set({ storedMessages: messageScript });
@@ -126,19 +129,20 @@ function addUserMessage() {
             return;
           }
 
-          conversationId = response.response.conversationId;
+          console.log(response);
+          conversationId = response.conversationId;
           // Check if response content exists and is an array
           if (
-            response.response.conversation &&
-            Array.isArray(response.response.conversation) &&
-            response.response.conversation.length > 0
+            response.chatMessages &&
+            Array.isArray(response.chatMessages) &&
+            response.chatMessages.length > 1
           ) {
-            const aiContent = response.response.conversation[0].text;
+            const aiContent = response.chatMessages[response.chatMessages.length-1].content;
             messageScript.push({ role: "assistant", content: aiContent });
           } else {
             console.error(
               "Invalid response format or empty content:",
-              response.response
+              response
             );
             messageScript.push({
               role: "assistant",
