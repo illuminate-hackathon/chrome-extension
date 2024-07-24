@@ -272,5 +272,15 @@ document.addEventListener("DOMContentLoaded", (event) => {
       internalPopup.style.display = "none";
     }
   };
+
+  const tooltipHTML = `
+  <div class="tooltip">
+    Press Ctrl + / for shortcuts
+  </div>
+`;
+
+  const tooltipElement = document.createRange().createContextualFragment(tooltipHTML);
+  popup.appendChild(tooltipElement);
+
 });
   

@@ -1,142 +1,188 @@
 body {
-    margin: 0;
+  margin: 0;
 }
 
 #popup {
-    margin: 1em;
+  margin: 1em;
 }
 
 input[type="text"]:focus {
-  border: 1px solid #555;
-  border-radius: 10px;
+border: 1px solid #555;
+border-radius: 10px;
 }
 
 .popup-title {
-  font-size: 2em;
-  color: #fff;
-  margin-bottom: 10px;
-  padding: .6em;
-  background-color: #a1d2f2;
+font-size: 2em;
+color: #fff;
+margin-bottom: 10px;
+padding: .6em;
+background-color: #a1d2f2;
 }
 
 .popup-body {
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between;
-  height: 440px;
-  width: 600px;
+display: flex;
+flex-direction: column;
+justify-content: space-between;
+height: 440px;
+width: 600px;
 }
 
 .messages-container {
-  overflow: auto;
-  height: 450px;
-  display: flex;
-  flex-direction: column;
-  padding-right: 8px;
+overflow: auto;
+height: 450px;
+display: flex;
+flex-direction: column;
+padding-right: 8px;
 }
 
 .message-bubble-user {
-  background-color: rgb(0, 132, 255);
-  color: white;
-  border-radius: 10px 10px 0 10px;
-  padding: 10px;
-  margin: 5px;
-  max-width: 500px;
-  align-self: flex-end;
-  background-image: linear-gradient(
-    rgb(0, 132, 255),
-    rgba(14, 121, 220, 0.589)
-  );
+background-color: rgb(0, 132, 255);
+color: white;
+border-radius: 10px 10px 0 10px;
+padding: 10px;
+margin: 5px;
+max-width: 500px;
+align-self: flex-end;
+background-image: linear-gradient(
+  rgb(0, 132, 255),
+  rgba(14, 121, 220, 0.589)
+);
 }
 
 .message-bubble-bot {
-  color: black;
-  border-radius: 10px 10px 10px 0;
-  padding: 10px;
-  margin: 5px;
-  max-width: 500px;
-  word-wrap: break-word; /* IE>=5.5 */
-  white-space: pre; /* IE>=6 */
-  white-space: -moz-pre-wrap; /* For Fx<=2 */
-  white-space: pre-wrap; /* Fx>3, Opera>8, Safari>3*/
-  background-image: linear-gradient(
-    rgb(233, 233, 232),
-    rgba(225, 225, 222, 0.766)
-  );
+color: black;
+border-radius: 10px 10px 10px 0;
+padding: 10px;
+margin: 5px;
+max-width: 500px;
+word-wrap: break-word; /* IE>=5.5 */
+white-space: pre; /* IE>=6 */
+white-space: -moz-pre-wrap; /* For Fx<=2 */
+white-space: pre-wrap; /* Fx>3, Opera>8, Safari>3*/
+background-image: linear-gradient(
+  rgb(233, 233, 232),
+  rgba(225, 225, 222, 0.766)
+);
 }
 
 .message-input {
-  padding: 10px;
-  border: 1px solid lightgray;
-  border-radius: 10px;
-  margin-top: 10px;
-  width: 580px;
+padding: 10px;
+border: 1px solid lightgray;
+border-radius: 10px;
+margin-top: 10px;
+width: 580px;
 }
 
 .loading-dots {
-  position: relative;
-  width: 35px;
-  .dot {
-    display: inline-block;
-    width: 8px;
-    height: 8px;
-    border-radius: 50%;
-    margin-right: 3px;
-    background: #a9acac;
-    animation: wave 1.3s linear infinite;
+position: relative;
+width: 35px;
+.dot {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  margin-right: 3px;
+  background: #a9acac;
+  animation: wave 1.3s linear infinite;
 
-    &:nth-child(2) {
-      animation-delay: -1.1s;
-    }
-
-    &:nth-child(3) {
-      animation-delay: -0.9s;
-    }
+  &:nth-child(2) {
+    animation-delay: -1.1s;
   }
+
+  &:nth-child(3) {
+    animation-delay: -0.9s;
+  }
+}
 }
 
 @keyframes wave {
-  0%,
-  60%,
-  100% {
-    transform: initial;
-  }
+0%,
+60%,
+100% {
+  transform: initial;
+}
 
-  30% {
-    transform: translateY(-10px);
-  }
+30% {
+  transform: translateY(-10px);
+}
 }
 
 .internal-popup {
-  display: none; 
-  position: fixed;
-  border-radius: 20px;
-  z-index: 2; 
-  left: 50%;
-  top: 50%;
-  transform: translate(-50%, -50%);
-  background-color: #fff;
-  padding: 20px;
-  border: 1px solid #888;
-  width: 80%;
-  box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+display: none; 
+position: fixed;
+border-radius: 20px;
+z-index: 2; 
+left: 50%;
+top: 50%;
+transform: translate(-50%, -50%);
+background-color: #fff;
+padding: 20px;
+border: 1px solid #888;
+width: 80%;
+box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
 }
 
 .internal-popup-content {
-  position: relative;
+position: relative;
 }
 
 .close-internal {
-  color: #aaa;
-  float: right;
-  font-size: 28px;
-  font-weight: bold;
+color: #aaa;
+float: right;
+font-size: 28px;
+font-weight: bold;
 }
 
 .close-internal:hover,
 .close-internal:focus {
-  color: black;
-  text-decoration: none;
-  cursor: pointer;
+color: black;
+text-decoration: none;
+cursor: pointer;
 }
 
+.tooltip {
+position: relative;
+display: block;
+width: 50%;
+left: 50%;
+right: 10px;
+background-color: grey;
+color: white;
+padding: 5px 10px;
+border-radius: 5px;
+font-size: 12px;
+margin-top: 10px;
+text-align: left;
+}
+
+@keyframes fadeIn {
+from { opacity: 0; }
+to { opacity: 1; }
+}
+
+.message-bubble-user,
+.message-bubble-bot,
+.loading-dots {
+animation: fadeIn 0.4s ease-in;
+}
+
+/* Ensure other CSS properties for these classes are maintained */
+.message-bubble-user {
+background-color: rgb(0, 132, 255);
+color: white;
+border-radius: 10px 10px 0 10px;
+padding: 10px;
+margin: 5px;
+max-width: 500px;
+align-self: flex-end;
+background-image: linear-gradient(rgb(0, 132, 255), rgba(14, 121, 220, 0.589));
+}
+
+.message-bubble-bot {
+color: black;
+border-radius: 10px 10px 10px 0;
+padding: 10px;
+margin: 5px;
+max-width: 500px;
+background-image: linear-gradient(rgb(233, 233, 232), rgba(225, 225, 222, 0.766));
+}
